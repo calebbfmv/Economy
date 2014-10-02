@@ -1,0 +1,8 @@
+name: cEconomy
+version: ${project.version}
+main: me.calebbfmv.nations.NEconomy
+depends: [Vault]
+commands:
+  cebalance:
+    aliases: [cemoney]
+  cepay:

@@ -1,0 +1,8 @@
+name: cEconomy
+version: 1.0.0.banana
+main: me.calebbfmv.nations.NEconomy
+depends: [Vault]
+commands:
+  cebalance:
+    aliases: [cemoney]
+  cepay:

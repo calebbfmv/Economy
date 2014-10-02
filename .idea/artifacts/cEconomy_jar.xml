@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="cEconomy:jar">
+    <output-path>$USER_HOME$/Desktop/Server/plugins</output-path>
+    <root id="archive" name="Economy.jar">
+      <element id="module-output" name="cEconomy" />
+    </root>
+  </artifact>
+</component>
