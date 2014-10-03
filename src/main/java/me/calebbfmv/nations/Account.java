@@ -66,5 +66,6 @@ public class Account {
 
     public void setBalance(double balance) {
         this.balance = balance;
+        NEconomy.getInstance().getManager().save(Bukkit.getPlayer(getUuid()));
     }
 }

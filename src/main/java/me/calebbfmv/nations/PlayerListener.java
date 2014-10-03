@@ -29,8 +29,14 @@ public class PlayerListener implements Listener {
     public void onCommand(PlayerCommandPreprocessEvent event){
         String command = event.getMessage().replace("/", "");
         if(command.contains(" ")){
-            command = command.split(" ")[0];
+            String label = command.split(" ")[0];
+            if(label.equalsIgnoreCase("balance") || label.equalsIgnoreCase("pay") || label.equalsIgnoreCase("money")) {
+                Bukkit.dispatchCommand(event.getPlayer(), "ce" + command);
+                event.setCancelled(true);
+                return;
+            }
         }
+        System.out.println(command + " :: " + "ce" + command);
         if(command.equalsIgnoreCase("balance") || command.equalsIgnoreCase("pay") || command.equalsIgnoreCase("money")){
             Bukkit.dispatchCommand(event.getPlayer(), "ce" + command);
             event.setCancelled(true);

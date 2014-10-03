@@ -37,9 +37,10 @@ public class NEconomy extends JavaPlugin {
         String host = getConfig().getString("host", "localhost");
         String user = getConfig().getString("user", "root");
         String password = getConfig().getString("password", "pippintook");
+        String name = getConfig().getString("db_name");
         int port = 3306;
         new QueryThread();
-        manager = new SQLManager(host, user, password, port);
+        manager = new SQLManager(host, user, password,name, port);
     }
 
     public static NEconomy getInstance(){

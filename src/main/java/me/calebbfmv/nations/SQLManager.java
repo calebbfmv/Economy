@@ -18,8 +18,7 @@ public class SQLManager {
     private String accountsColumnUser = "name";
     private String accountsColumnMoney = "money";
 
-    public SQLManager(String host, String user, String pass, int port){
-        String db = "NationsMoney3";
+    public SQLManager(String host, String user, String pass, String db, int port){
         try {
             Class.forName("com.mysql.jdbc.Driver");
             String statement = "CREATE DATABASE IF NOT EXISTS " + db;
@@ -33,7 +32,8 @@ public class SQLManager {
         this.user = user;
         this.pass = pass;
         con = getConnection();
-        QueryThread.addQuery("CREATE TABLE IF NOT EXISTS " + accountsName + " (" + accountsColumnUser + " varchar(64) NOT NULL, "  + accountsColumnMoney + " double NOT NULL)");
+        QueryThread.addQuery("CREATE TABLE IF NOT EXISTS " + accountsName + " (" + accountsColumnUser + " varchar(64) NOT NULL PRIMARY KEY, "  + accountsColumnMoney + " double NOT NULL)");
+
     }
 
     public Connection getConnection() {
@@ -89,69 +89,75 @@ public class SQLManager {
         if(account == null){
             return;
         }
-        String update = "INSERT INTO `" + accountsName + "` VALUES('" + player.getName() + "', " + account.getBalance() + ")" +
-                "ON DUPLICATE KEY UPDATE `" + accountsColumnMoney + "`= "+ account.getBalance();
+        String update = "UPDATE `" + accountsName + "` SET `" + accountsColumnMoney + "`= " + account.getBalance() + " WHERE `" + accountsColumnUser + "`='" + player.getName() + "'";
         insert(update);
     }
 
-    public double getBalance(Player player){
+    public void getBalance(final Player player, final Callable<Double> call){
         Account account = Account.get(player);
         if(account != null){
-            return account.getBalance();
-        }
-        double[] booleans = new double[1];
-        new BukkitRunnable(){
-            @Override
-            public void run() {
-                String select = "SELECT * FROM `" + accountsName + "` WHERE `" + accountsColumnUser + "`='" + player.getName() + "'";
-                ResultSet res = getResultSet(select);
-                try {
-                    if (res.next()) {
-                        booleans[0] = res.getDouble(accountsColumnMoney);
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }.runTaskAsynchronously(NEconomy.getInstance());
-        return booleans[0];
-    }
-
-    public boolean hasAccount(final Player player){
-        boolean[] booleans = new boolean[]{false};
-        new BukkitRunnable(){
-            @Override
-            public void run() {
-                String select = "SELECT * FROM `" + accountsName + "` WHERE `" + accountsColumnUser + "`='" + player.getName() + "'";
-                ResultSet res = getResultSet(select);
-                try {
-                    if (res.next()) {
-                        booleans[0] = true;
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }.runTaskAsynchronously(NEconomy.getInstance());
-        return booleans[0];
-    }
-
-    public void load(Player player) {
-        if (!hasAccount(player)) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    create(player);
-                }
-            }.runTaskLaterAsynchronously(NEconomy.getInstance(), 5L);
+            call.call(account.getBalance());
             return;
         }
-        final double balance = getBalance(player);
-        new BukkitRunnable() {
+        new BukkitRunnable(){
             @Override
             public void run() {
-                new Account(player, balance);
+                String select = "SELECT `money` FROM `" + accountsName + "` WHERE `" + accountsColumnUser + "`='" + player.getName() + "'";
+                ResultSet res = getResultSet(select);
+                try {
+                    if (res.next()) {
+                        call.call(res.getDouble(accountsColumnMoney));
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
-        }.runTaskLaterAsynchronously(NEconomy.getInstance(), 5L);
+        }.runTaskAsynchronously(NEconomy.getInstance());
+    }
+
+    public void hasAccount(final Player player, final Callable<Boolean> call) {
+        new BukkitRunnable(){
+            @Override
+            public void run() {
+                String select = "SELECT * FROM `" + accountsName + "` WHERE `" + accountsColumnUser + "`='" + player.getName() + "'";
+                ResultSet res = getResultSet(select);
+                try {
+                    call.call(res.next());
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.runTaskAsynchronously(NEconomy.getInstance());
+    }
+
+    public void load(final Player player) {
+        Callable<Boolean> c = new Callable<Boolean>() {
+            public void call(Boolean res) {
+                if (!res) {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            create(player);
+                        }
+                    }.runTaskLaterAsynchronously(NEconomy.getInstance(), 5L);
+                }
+            }
+        };
+        Callable<Double> balCall = new Callable<Double>() {
+            public void call(Double bal) {
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        new Account(player, bal);
+                    }
+                }.runTaskLaterAsynchronously(NEconomy.getInstance(), 5L);
+            }
+        };
+        getBalance(player, balCall);
+        hasAccount(player, c);
+    }
+
+    public abstract class Callable<T> {
+        public abstract void call(T t);
     }
 }
