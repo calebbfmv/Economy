@@ -56,10 +56,6 @@ public class Account {
         return uuid;
     }
 
-    public void setUuid(UUID uuid) {
-        this.uuid = uuid;
-    }
-
     public double getBalance() {
         return balance;
     }
@@ -67,5 +63,9 @@ public class Account {
     public void setBalance(double balance) {
         this.balance = balance;
         NEconomy.getInstance().getManager().save(Bukkit.getPlayer(getUuid()));
+    }
+
+    public void remove(){
+        accounts.remove(getUuid());
     }
 }
