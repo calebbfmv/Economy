@@ -66,6 +66,10 @@ public class ECommands implements CommandExecutor {
             Account pAccount = Account.get(player);
             Account tAccount = Account.get(target);
             double balance = pAccount.getBalance();
+            if(amount < 0){
+                sendMessage(sender, "Please give a valid number above 0!");
+                return true;
+            }
             if(balance < amount){
                 sendMessage(sender, "You don't have enough money!");
                 return true;
